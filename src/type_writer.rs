@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::time::Duration;
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Default, Component)]
 pub struct TypeWriter {
     finished: bool,
     timer: Timer,
@@ -10,10 +10,16 @@ pub struct TypeWriter {
 }
 
 impl TypeWriter {
+    /// TypeWriters are paused on creation.
+    ///
+    /// Use [`TypeWriter::start`] to begin typing, or [`TypeWriter::new_start`].
     #[inline]
     pub fn new(string: String, chars_per_sec: f32) -> Self {
+        let mut timer = Timer::from_seconds(1.0 / chars_per_sec, TimerMode::Repeating);
+        timer.pause();
+
         Self {
-            timer: Timer::from_seconds(1.0 / chars_per_sec, TimerMode::Repeating),
+            timer,
             string: string.trim().into(),
             index: 0,
             finished: false,
@@ -21,18 +27,35 @@ impl TypeWriter {
     }
 
     #[inline]
-    pub fn tick(&mut self, time: &Time, on_increment: impl FnOnce()) {
+    pub fn new_start(string: String, chars_per_sec: f32) -> Self {
+        let mut slf = Self::new(string, chars_per_sec);
+        slf.start();
+
+        slf
+    }
+
+    #[inline]
+    pub fn tick(&mut self, time: &Time, on_increment: impl FnOnce(&mut TypeWriter)) -> &mut Self {
         self.timer.tick(time.delta());
 
         if self.timer.just_finished() {
-            if self.index + 1 >= self.string.len() {
+            if self.index >= self.string.len() {
                 self.finished = true;
                 self.timer.pause();
             } else {
                 self.index += 1;
             }
 
-            on_increment();
+            on_increment(self);
+        }
+
+        self
+    }
+
+    #[inline]
+    pub fn on_finish(&self, on_finish: impl FnOnce()) {
+        if self.finished {
+            on_finish();
         }
     }
 
@@ -72,6 +95,11 @@ impl TypeWriter {
     #[inline]
     pub fn finished(&self) -> bool {
         self.finished
+    }
+
+    #[inline]
+    pub fn reveal_all_text(&mut self) {
+        self.index = self.string.len();
     }
 
     #[inline]
