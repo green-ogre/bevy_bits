@@ -5,7 +5,7 @@ use std::time::Duration;
 pub struct TypeWriter {
     finished: bool,
     timer: Timer,
-    string: String,
+    sections: Vec<TextSection>,
     index: usize,
 }
 
@@ -14,24 +14,33 @@ impl TypeWriter {
     ///
     /// Use [`TypeWriter::start`] to begin typing, or [`TypeWriter::new_start`].
     #[inline]
-    pub fn new(string: String, chars_per_sec: f32) -> Self {
+    pub fn new(sections: Vec<TextSection>, chars_per_sec: f32) -> Self {
         let mut timer = Timer::from_seconds(1.0 / chars_per_sec, TimerMode::Repeating);
         timer.pause();
 
         Self {
             timer,
-            string: string.trim().into(),
+            sections,
             index: 0,
             finished: false,
         }
     }
 
     #[inline]
-    pub fn new_start(string: String, chars_per_sec: f32) -> Self {
-        let mut slf = Self::new(string, chars_per_sec);
+    pub fn new_start(sections: Vec<TextSection>, chars_per_sec: f32) -> Self {
+        let mut slf = Self::new(sections, chars_per_sec);
         slf.start();
 
         slf
+    }
+
+    fn total_len(&self) -> usize {
+        let mut total_len = 0;
+        for section in self.sections.iter() {
+            total_len += section.value.len();
+        }
+
+        total_len
     }
 
     #[inline]
@@ -39,7 +48,7 @@ impl TypeWriter {
         self.timer.tick(time.delta());
 
         if self.timer.just_finished() {
-            if self.index >= self.string.len() {
+            if self.index >= self.total_len() {
                 self.finished = true;
                 self.timer.pause();
             } else {
@@ -75,8 +84,8 @@ impl TypeWriter {
     }
 
     #[inline]
-    pub fn with_string(&mut self, string: String) -> &mut Self {
-        self.string = string;
+    pub fn with_sections(&mut self, sections: Vec<TextSection>) -> &mut Self {
+        self.sections = sections;
         self
     }
 
@@ -99,36 +108,64 @@ impl TypeWriter {
 
     #[inline]
     pub fn reveal_all_text(&mut self) {
-        self.index = self.string.len();
+        self.index = self.total_len();
     }
 
     #[inline]
-    pub fn revealed_text(&self) -> &str {
-        &self.string[0..self.index]
-    }
+    pub fn revealed_text(&self) -> Vec<TextSection> {
+        let mut remaining_len = self.index;
+        let mut sections = Vec::new();
 
-    #[inline]
-    pub fn revealed_text_with_line_wrap(&self) -> String {
-        let mut slice = self.string[0..self.index].to_owned();
-        let padding = self
-            .string
-            .chars()
-            .enumerate()
-            .skip(slice.len())
-            .find_map(|(i, c)| {
-                if c == ' ' {
-                    Some(i - slice.len())
-                } else {
-                    None
-                }
-            })
-            .unwrap_or(0);
-        if slice.ends_with(' ') {
-            for _ in 0..padding {
-                slice.push(' ');
+        for section in self.sections.iter() {
+            if section.value.len() > remaining_len {
+                sections.push(TextSection::new(
+                    section.value[..remaining_len].to_owned(),
+                    section.style.clone(),
+                ));
+
+                break;
+            } else {
+                remaining_len -= section.value.len();
+                sections.push(section.clone());
             }
         }
 
-        slice
+        sections
+    }
+
+    #[inline]
+    pub fn revealed_text_with_line_wrap(&self) -> Vec<TextSection> {
+        let mut remaining_len = self.index;
+        let mut sections = Vec::new();
+
+        for section in self.sections.iter() {
+            if section.value.len() > remaining_len {
+                let mut i = 0;
+                if section.value.as_bytes()[remaining_len.saturating_sub(1)] != b' ' {
+                    while section
+                        .value
+                        .as_bytes()
+                        .get(remaining_len + i)
+                        .is_some_and(|v| *v != b' ')
+                    {
+                        i += 1;
+                    }
+                }
+
+                let mut buf = section.value[..remaining_len].to_owned();
+                for _ in 0..i {
+                    buf.push(' ');
+                }
+
+                sections.push(TextSection::new(buf, section.style.clone()));
+
+                break;
+            } else {
+                remaining_len -= section.value.len();
+                sections.push(section.clone());
+            }
+        }
+
+        sections
     }
 }

@@ -5,7 +5,7 @@ use bevy::{
 
 // pub mod pixel_perfect;
 pub mod animated_sprites;
-pub mod type_writer;
+// pub mod type_writer;
 
 pub fn close_on_escape(mut input: EventReader<KeyboardInput>, mut writer: EventWriter<AppExit>) {
     #[cfg(debug_assertions)]
