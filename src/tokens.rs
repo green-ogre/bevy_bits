@@ -14,6 +14,24 @@ pub struct TextSection {
     pub effects: Cow<'static, [TextEffect]>,
 }
 
+impl TextSection {
+    pub fn bevy_section(
+        self,
+        font: bevy::asset::Handle<bevy::text::Font>,
+        font_size: f32,
+        default_color: bevy::color::Color,
+    ) -> bevy::text::TextSection {
+        bevy::text::TextSection {
+            value: self.text.into(),
+            style: bevy::text::TextStyle {
+                font_size,
+                font,
+                color: self.color.map(|c| c.bevy_color()).unwrap_or(default_color),
+            },
+        }
+    }
+}
+
 impl From<&'static str> for TextSection {
     fn from(value: &'static str) -> Self {
         TextSection {
