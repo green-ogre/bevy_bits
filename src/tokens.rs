@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TextCommand {
+    Clear,
     Speed(f32),
     Pause(f32),
 }
@@ -45,7 +46,7 @@ pub enum Effects {
     Const(&'static [TextEffect]),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TextEffect {
     Wave,
 }
@@ -57,6 +58,16 @@ pub enum TextColor {
     Blue,
 }
 
+impl TextColor {
+    pub fn bevy_color(&self) -> bevy::color::Color {
+        match self {
+            Self::Red => bevy::color::Color::linear_rgb(1.0, 0.0, 0.0),
+            Self::Green => bevy::color::Color::linear_rgb(0.0, 1.0, 0.0),
+            Self::Blue => bevy::color::Color::linear_rgb(0.0, 0.0, 1.0),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum DialogueBoxToken {
     Section(TextSection),
@@ -64,27 +75,34 @@ pub enum DialogueBoxToken {
 }
 
 impl DialogueBoxToken {
-    pub fn parse_command(args: &str, cmd: &str) -> Self {
-        match cmd {
-            "red" => Self::Section(TextSection {
-                text: args.to_owned().into(),
-                color: Some(TextColor::Red),
-                effects: Cow::Owned(Vec::new()),
-            }),
-            "wave" => Self::Section(TextSection {
-                text: args.to_owned().into(),
-                color: None,
-                effects: Cow::Owned(vec![TextEffect::Wave]),
-            }),
-            "pause" => Self::Command(TextCommand::Pause(
-                args.parse::<f32>()
-                    .unwrap_or_else(|e| panic!("invalid args `{args}` for cmd `{cmd}`: {e}")),
-            )),
-            "speed" => Self::Command(TextCommand::Speed(
-                args.parse::<f32>()
-                    .unwrap_or_else(|e| panic!("invalid args `{args}` for cmd `{cmd}`: {e}")),
-            )),
-            c => panic!("command `{c}` is unimplemented"),
+    pub fn parse_command(args: Option<&str>, cmd: &str) -> Self {
+        if let Some(args) = args {
+            match cmd {
+                "red" => Self::Section(TextSection {
+                    text: args.to_owned().into(),
+                    color: Some(TextColor::Red),
+                    effects: Cow::Owned(Vec::new()),
+                }),
+                "wave" => Self::Section(TextSection {
+                    text: args.to_owned().into(),
+                    color: None,
+                    effects: Cow::Owned(vec![TextEffect::Wave]),
+                }),
+                "pause" => Self::Command(TextCommand::Pause(
+                    args.parse::<f32>()
+                        .unwrap_or_else(|e| panic!("invalid args `{args}` for cmd `{cmd}`: {e}")),
+                )),
+                "speed" => Self::Command(TextCommand::Speed(
+                    args.parse::<f32>()
+                        .unwrap_or_else(|e| panic!("invalid args `{args}` for cmd `{cmd}`: {e}")),
+                )),
+                c => panic!("command `{c}` is unimplemented"),
+            }
+        } else {
+            match cmd {
+                "clear" => Self::Command(TextCommand::Clear),
+                c => panic!("command `{c}` is unimplemented or requires input args"),
+            }
         }
     }
 }
