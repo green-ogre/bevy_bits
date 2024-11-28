@@ -171,6 +171,9 @@ impl quote::ToTokens for DialogueBoxToken {
                 TextCommand::Pause(pause) => tokens.append_all(
                     quote! { bevy_bits::DialogueBoxToken::Command(bevy_bits::tokens::TextCommand::Pause(#pause)) },
                 ),
+                TextCommand::Delete(num) => tokens.append_all(
+                    quote! { bevy_bits::DialogueBoxToken::Command(bevy_bits::tokens::TextCommand::Delete(#num)) },
+                ),
             },
             DialogueBoxToken::Sequence(seq) => {
                  tokens.append_all(
