@@ -1,5 +1,9 @@
 use std::borrow::Cow;
 
+mod parse;
+
+pub use parse::{parse_groups, TokenGroup};
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TextCommand {
     Clear,
