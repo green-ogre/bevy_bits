@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TextCommand {
-    Clear,
+    // Clear,
     Speed(f32),
     Pause(f32),
 }
@@ -90,6 +90,7 @@ impl TextColor {
 pub enum DialogueBoxToken {
     Section(TextSection),
     Command(TextCommand),
+    Sequence(Cow<'static, [DialogueBoxToken]>),
 }
 
 impl DialogueBoxToken {
@@ -117,8 +118,9 @@ impl DialogueBoxToken {
                 c => panic!("command `{c}` is unimplemented"),
             }
         } else {
+            #[allow(clippy::match_single_binding)]
             match cmd {
-                "clear" => Self::Command(TextCommand::Clear),
+                // "clear" => Self::Command(TextCommand::Clear),
                 c => panic!("command `{c}` is unimplemented or requires input args"),
             }
         }
@@ -127,58 +129,7 @@ impl DialogueBoxToken {
 
 pub trait IntoDialogueBoxToken {
     fn into_token(self) -> DialogueBoxToken;
-
-    // fn effect(self, effect: TextEffect) -> Effect<Self>
-    // where
-    //     Self: Sized,
-    // {
-    //     Effect {
-    //         token: self,
-    //         effect,
-    //     }
-    // }
-    //
-    // fn color(self, color: TextColor) -> Color<Self>
-    // where
-    //     Self: Sized,
-    // {
-    //     Color { token: self, color }
-    // }
 }
-
-// pub struct Effect<T> {
-//     token: T,
-//     effect: TextEffect,
-// }
-//
-// impl<T: IntoDialogueBoxToken> IntoDialogueBoxToken for Effect<T> {
-//     fn into_token(self) -> DialogueBoxToken {
-//         let mut token = self.token.into_token();
-//
-//         if let DialogueBoxToken::Section(section) = &mut token {
-//             section.effects.push(self.effect);
-//         }
-//
-//         token
-//     }
-// }
-//
-// pub struct Color<T> {
-//     token: T,
-//     color: TextColor,
-// }
-//
-// impl<T: IntoDialogueBoxToken> IntoDialogueBoxToken for Color<T> {
-//     fn into_token(self) -> DialogueBoxToken {
-//         let mut token = self.token.into_token();
-//
-//         if let DialogueBoxToken::Section(section) = &mut token {
-//             section.color = Some(self.color);
-//         }
-//
-//         token
-//     }
-// }
 
 impl IntoDialogueBoxToken for &'static str {
     fn into_token(self) -> DialogueBoxToken {
@@ -206,6 +157,6 @@ impl From<String> for DialogueBoxToken {
 
 impl From<&'static str> for DialogueBoxToken {
     fn from(value: &'static str) -> Self {
-        DialogueBoxToken::Section(value.into())
+        DialogueBoxToken::Sequence(Cow::Owned(vec![DialogueBoxToken::Section(value.into())]))
     }
 }
