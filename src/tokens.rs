@@ -2,7 +2,9 @@ use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TextCommand {
-    // Clear,
+    Clear,
+    AwaitClear,
+    ClearAfter(f32),
     Speed(f32),
     Pause(f32),
 }
