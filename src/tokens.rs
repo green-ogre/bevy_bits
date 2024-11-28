@@ -4,6 +4,7 @@ use std::borrow::Cow;
 pub enum TextCommand {
     Clear,
     AwaitClear,
+    Delete(usize),
     ClearAfter(f32),
     Speed(f32),
     Pause(f32),
