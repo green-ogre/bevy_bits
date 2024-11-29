@@ -18,7 +18,7 @@ pub enum TextCommand {
 pub struct TextSection {
     pub text: Cow<'static, str>,
     pub color: Option<TextColor>,
-    pub effects: Cow<'static, [TextEffect]>,
+    pub effect: Option<TextEffect>,
 }
 
 impl TextSection {
@@ -44,7 +44,7 @@ impl From<&'static str> for TextSection {
         TextSection {
             text: Cow::Borrowed(value),
             color: None,
-            effects: Vec::new().into(),
+            effect: None,
         }
     }
 }
@@ -54,7 +54,7 @@ impl From<String> for TextSection {
         TextSection {
             text: Cow::Owned(value),
             color: None,
-            effects: Vec::new().into(),
+            effect: None,
         }
     }
 }
@@ -107,12 +107,12 @@ impl DialogueBoxToken {
                 "red" => Self::Section(TextSection {
                     text: args.to_owned().into(),
                     color: Some(TextColor::Red),
-                    effects: Cow::Owned(Vec::new()),
+                    effect: None,
                 }),
                 "wave" => Self::Section(TextSection {
                     text: args.to_owned().into(),
                     color: None,
-                    effects: Cow::Owned(vec![TextEffect::Wave]),
+                    effect: Some(TextEffect::Wave),
                 }),
                 "pause" => Self::Command(TextCommand::Pause(
                     args.parse::<f32>()
