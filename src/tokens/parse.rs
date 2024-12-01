@@ -5,12 +5,11 @@ use winnow::{
     ascii::float,
     combinator::{alt, delimited, opt, peek, terminated},
     error::{ContextError, ParseError},
-    stream::Stream,
     token::{any, take_till, take_while},
     PResult, Parser,
 };
 
-const EXAMPLES: &str = "<1.2> But you're a `big FLOWER|red`[wave]!";
+const _EXAMPLES: &str = "<1.2> But you're a `big FLOWER|red`[wave]!";
 
 fn parse_speed(input: &mut &str) -> PResult<f32> {
     delimited('<', float, '>').parse_next(input)
