@@ -10,7 +10,6 @@ pub mod tokens;
 pub use tokens::*;
 
 pub fn close_on_escape(mut input: EventReader<KeyboardInput>, mut writer: EventWriter<AppExit>) {
-    #[cfg(debug_assertions)]
     for e in input.read() {
         if matches!(e, KeyboardInput {
             key_code,
