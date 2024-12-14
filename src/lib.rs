@@ -5,7 +5,6 @@ use bevy::{
 
 // pub mod pixel_perfect;
 // pub mod animated_sprites;
-// pub mod type_writer;
 pub mod text;
 // pub use tokens::*;
 
